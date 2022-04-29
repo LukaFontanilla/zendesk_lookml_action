@@ -19,7 +19,8 @@ class Zendesk:
     '''
     def __response_caller(self, method: str, type: str, *args, **kwargs) -> dict:
         try:
-            response = requests[method](*args,**kwargs)
+            # convert requests module to dictionary for subscripting
+            response = requests.__dict__[method](*args,**kwargs)
             if response.status_code == 200:
                 data = response.json()
                 return data
@@ -32,7 +33,7 @@ class Zendesk:
         return os.environ.get(self.env_variable, 'Specified environment variable is not set.')
     
     def __get_ticket(self) -> dict:
-        data = self.__response_caller('GET',"get_ticket",self.api_url, headers=self.headers,auth=self.auth)
+        data = self.__response_caller('get',"get_ticket",self.api_url, headers=self.headers,auth=self.auth)
         return data
 
     '''
@@ -40,7 +41,7 @@ class Zendesk:
     '''
     def add_comment(self, comment: str, public: bool) -> dict:
         json = {"ticket": {"comment":{"body":comment,"public": True if public == "public" else False}}}
-        data = self.__response_caller('PUT', 'add_comment', self.api_url,headers=self.headers,json=json,auth=self.auth)
+        data = self.__response_caller('put', 'add_comment', self.api_url,headers=self.headers,json=json,auth=self.auth)
         return data
     
     '''
@@ -48,7 +49,7 @@ class Zendesk:
     '''
     def reopen_ticket(self, comment: str, status: str) -> dict:
         json = {"ticket": { "comment": {"body": comment,"public": False}, "status":status.lower()}}
-        data = self.__response_caller('PUT', 'reopen_ticket', self.api_url,headers=self.headers,json=json,auth=self.auth)
+        data = self.__response_caller('put', 'reopen_ticket', self.api_url,headers=self.headers,json=json,auth=self.auth)
         return data
     
     '''
@@ -59,7 +60,7 @@ class Zendesk:
         new_tags = current_tags + tags.split(',')
         new_tags = [tag.strip() for tag in new_tags]
         json = {"ticket": { "comment": {"body": comment,"public": False}, "priority":priority.lower(), "tags":new_tags}} if priority.lower() == "high" else {"ticket": { "comment": {"body": comment,"public": False}, "priority":priority.lower()}}
-        data = self.__response_caller('PUT', 'set_priority', self.api_url,headers=self.headers,json=json,auth=self.auth)
+        data = self.__response_caller('put', 'set_priority', self.api_url,headers=self.headers,json=json,auth=self.auth)
         return data
     
     '''
