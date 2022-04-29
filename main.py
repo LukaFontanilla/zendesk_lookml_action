@@ -66,11 +66,9 @@ class Zendesk:
     method to update a ticket and set new tags, indicate that tags should be comma deliminated
     '''
     def set_tags(self,tags: str) -> dict:
-        headers = {"Content-Type": "application/json"}
         current_tags = self.get_ticket()["tags"]
         new_tags = current_tags + tags.split(',')
         json = {"ticket": {"tags":new_tags}}
-        auth = (self.user,self.access_token())
         data = self.__response_caller('PUT', 'set_tags', self.api_url,headers=self.headers,json=json,auth=self.auth)
         return data
     
