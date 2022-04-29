@@ -88,9 +88,14 @@ def run_ticket_update(request):
     res = {}
     if request_json["form_params"]["function"] == "Add Comment":
         res = function_mapping["Add Comment"](request_json["form_params"]["comment"],request_json["form_params"]["public"])
-    elif request_json["form_params"]["function"] == "Reopen Ticekt":
+    elif request_json["form_params"]["function"] == "Reopen Ticket":
         res = function_mapping["Reopen Ticket"](request_json["form_params"]["comment"],request_json["form_params"]["status"])
-    else:
+    elif request_json["form_params"]["function"] == "Set Priority":
         res = function_mapping["Set Priority"](request_json["form_params"]["comment"],request_json["form_params"]["priority"],request_json["form_params"]["tags"])
+    elif request_json["form_params"]["function"] == "Set Tags":
+        res = function_mapping["Set Tags"](request_json["form_params"]["tags"])
+    else:
+        res['data'] = "No Function Selected, exiting function.."
+        return Response(res,status=401,mimetype='application/json')
     print(res)
     return Response(res, status=200, mimetype='application/json')

@@ -1,0 +1,49 @@
+name: 'example-deploy-zendesk-cloud-function'
+
+env:
+  FUNCTION_NAME: zendesk-action
+
+on:
+  push:
+    branches:
+    - 'deploy-zendesk-cloud-function'
+  pull_request:
+    branches:
+    - 'deploy-zendesk-cloud-function'
+
+jobs:
+  deploy:
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+    
+    runs-on: 'ubuntu-latest'
+    strategy:
+      matrix:
+        node-version: [14.x]
+    steps:
+    - uses: actions/checkout@v2
+
+    - id: auth
+      uses: google-github-actions/auth@v0
+      with:
+        workload_identity_provider: ${{ secrets.WIF_PROIVDER }}
+        service_account: ${{ secrets.SA_EMAIL }}
+    
+    - id: 'deploy-function'
+      uses: 'google-github-actions/deploy-cloud-functions@v0'
+      with:
+        name: ${{ env.FUNCTION_NAME }}
+        env_vars: 'ZENDESK_INSTANCE=${{ secrets.ZENDESK_INSTANCE }}, ZENDESK_USERNAME=${{ secrets.ZENDESK_USERNAME }}, ZENDESK_USERID=${{ secrets.ZENDESK_USERID }}, ZENDESK_ACCESS_TOKEN=${{ secrets.ZENDESK_ACCESS_TOKEN }}'
+        runtime: 'python3.8'
+        entry_point: 'run_ticket_update'
+        source_dir: './cloud_function'
+    
+    - id: 're-deploy-public'
+      run: |-
+        gcloud functions add-iam-policy-binding ${{ env.FUNCTION_NAME }} \
+          --member="allUsers" \
+          --role="roles/cloudfunctions.invoker"
+
+    - id: 'print-deployed-function'
+      run: echo "${{ steps.deploy-function.outputs.url }}"
